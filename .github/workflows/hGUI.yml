@@ -1,0 +1,23 @@
+#include-once
+#include <GUIConstantsEx.au3>
+
+Global $__gMGRM_oGUIs = ObjCreate("Scripting.Dictionary") ; obj["0xHWND:MSGID"] = sFuncName
+Global $__gMGRM_oMSGs = ObjCreate("Scripting.Dictionary") ; obj[iMsgID] = NumGUIs
+
+Func _MultiGUIRegisterMsg($hGUI, $iMsg, $vFunc = Null)
+    If IsString($iMsg) Then
+        $iMsg = StringSplit($iMsg, " ,-|;.")
+        For $i = 1 To $iMsg[0]
+            _MultiGUIRegisterMsg($hGUI, Int($iMsg[$i]), $vFunc)
+        Next
+        Return
+    EndIf
+
+    If IsFunc($vFunc) Or IsString($vFunc) Then
+        ; register message dispatcher, and increment message counter
+        If Not $__gMGRM_oMSGs.Exists($iMsg) Or $__gMGRM_oMSGs.Item($iMsg) <= 0 Then
+            GUIRegisterMsg($iMsg, __multiGUIRegisterMsg_dispatcher)
+            $__gMGRM_oMSGs.Item($iMsg) = 1
+        Else
+            $__gMGRM_oMSGs.Item($iMsg) = $__gMGRM_oMSGs.Item($iMsg) + 1
+        EndIf
